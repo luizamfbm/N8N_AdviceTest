@@ -1,0 +1,89 @@
+{
+  "name": "Random Advice to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "cc61bc5e-06fc-4293-b9df-4bb1d3357b2a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.adviceslip.com/advice",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "id": "9d2ee7dd-3d74-4d1e-9176-9d99ead497b3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega o primeiro item dos dados de entrada\nconst inputData = $input.all()[0].json.data;\n\n// Faz o parse do JSON que está como string\nconst parsedData = JSON.parse(inputData);\n\n// Extrai os valores necessários\nconst id = parsedData.slip.id;\nconst advice = parsedData.slip.advice;\n\n// Retorna os dados estruturados\nreturn [\n  {\n    json: {\n      id: id,\n      advice: advice\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "id": "9fa42653-1f15-4796-a89c-f273d24114ac",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "value": "<YOUR_GOOGLE_SHEET_ID>"
+        },
+        "sheetName": {
+          "value": "<YOUR_SHEET_NAME_OR_GID>"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "Advice": "={{ $json.advice }}"
+          },
+          "matchingColumns": ["ID"],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "type": "string"
+            },
+            {
+              "id": "Advice",
+              "displayName": "Advice",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [660, 0],
+      "id": "b2edc83d-1b5a-4947-8844-535494f2d384",
+      "name": "Google Sheets"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [[{ "node": "HTTP Request", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request": {
+      "main": [[{ "node": "Code", "type": "main", "index": 0 }]]
+    },
+    "Code": {
+      "main": [[{ "node": "Google Sheets", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "example-version-id",
+  "id": "example-workflow-id",
+  "tags": []
+}
